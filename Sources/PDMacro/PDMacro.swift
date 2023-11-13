@@ -1,11 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-/// A macro that produces both a value and a string containing the
-/// source code that generated the value. For example,
-///
-///     #stringify(x + y)
-///
-/// produces a tuple `(x + y, "x + y")`.
-@freestanding(expression)
-public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "PDMacroMacros", type: "StringifyMacro")
+/// Add computed properties named `is<Case>` for each case element in the enum.
+@attached(member, names: arbitrary)
+public macro CaseDetection() = #externalMacro(module: "PDMacroMacros", type: "CaseDetectionMacro")

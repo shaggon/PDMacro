@@ -3,31 +3,44 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-/// Implementation of the `stringify` macro, which takes an expression
-/// of any type and produces a tuple containing the value of that expression
-/// and the source code that produced the value. For example
-///
-///     #stringify(x + y)
-///
-///  will expand to
-///
-///     (x + y, "x + y")
-public struct StringifyMacro: ExpressionMacro {
-    public static func expansion(
-        of node: some FreestandingMacroExpansionSyntax,
-        in context: some MacroExpansionContext
-    ) -> ExprSyntax {
-        guard let argument = node.argumentList.first?.expression else {
-            fatalError("compiler bug: the macro does not have any arguments")
-        }
+public enum CaseDetectionMacro: MemberMacro {
+  public static func expansion(
+    of node: AttributeSyntax,
+    providingMembersOf declaration: some DeclGroupSyntax,
+    in context: some MacroExpansionContext
+  ) throws -> [DeclSyntax] {
+    declaration.memberBlock.members
+      .compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
+      .map { $0.elements.first!.name }
+      .map { ($0, $0.initialUppercased) }
+      .map { original, uppercased in
+        """
+        var is\(raw: uppercased): Bool {
+          if case .\(raw: original) = self {
+            return true
+          }
 
-        return "(\(argument), \(literal: argument.description))"
+          return false
+        }
+        """
+      }
+  }
+}
+
+extension TokenSyntax {
+  fileprivate var initialUppercased: String {
+    let name = self.text
+    guard let initial = name.first else {
+      return name
     }
+
+    return "\(initial.uppercased())\(name.dropFirst())"
+  }
 }
 
 @main
 struct PDMacroPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        StringifyMacro.self,
+        CaseDetectionMacro.self,
     ]
 }

@@ -1,8 +1,12 @@
 import PDMacro
 
-let a = 17
-let b = 25
+@CaseDetection
+enum Animal {
+  case dog
+  case cat(curious: Bool)
+}
 
-let (result, code) = #stringify(a + b)
-
-print("The value \(result) was produced by the code \"\(code)\"")
+print("\(Animal.dog.isDog)")
+print("\(Animal.dog.isCat)")
+print("\(Animal.cat(curious: true).isDog)")
+print("\(Animal.cat(curious: false).isCat)")
